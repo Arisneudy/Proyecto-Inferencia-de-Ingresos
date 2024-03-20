@@ -1,4 +1,11 @@
 # Proyecto Inferencia de Ingresos
+<br/>
+<p align="center">
+ <a href="https://plataformavirtual.itla.edu.do/pluginfile.php/929260/mod_assign/introattachment/0/Descripci%C3%B3n%20Proyecto%20Inferencia%20de%20Ingresos.pdf?forcedownload=1" target="_blank" style="color:blue; font-size:20px; text-decoration:none; font-weight: bold;">
+    Descarga el archivo PDF con los requerimientos aquí
+ </a>
+</p>
+
 
 ## INSTRUCCIONES
 
