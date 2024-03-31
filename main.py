@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import json
 
 dgm_df = pd.read_csv('Nominas/nomina_dgm.csv')
+map_df = pd.read_csv('Nominas/nomina_map.csv')
 dgm_df = dgm_df.iloc[:, :-2]
 
 dgm_column_names = dgm_df.columns
