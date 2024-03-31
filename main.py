@@ -92,20 +92,24 @@ sts = StandardScaler()
 features = [
     "GENERO",
     "DEPARTAMENTO",
-    "FUNCION",
-    "SUELDO_BRUTO",
-    "ISR",
-    "AFP",
-    "SFS"
+    "FUNCION"
 ]
 target = "SUELDO_NETO"
 
 x, y = dgm_df[features], dgm_df[target]
 
-cat_feats = ohe.fit_transform(x.select_dtypes("object")).toarray()
-num_feats = sts.fit_transform(x.select_dtypes("number"))
+# Encode categorical features and scale numerical features
+cat_feats = dgm_df.select_dtypes("object")
+num_feats = dgm_df.select_dtypes(['float64', 'int64']).drop(columns=[target])  # Exclude the target
 
-xp = np.hstack([cat_feats, num_feats])
+# Fit transform the categorical features
+cat_feats_encoded = ohe.fit_transform(cat_feats).toarray()
+
+# Fit transform the numerical features
+num_feats_scaled = sts.fit_transform(num_feats)
+
+# Horizontally stack the features
+xp = np.hstack([cat_feats_encoded, num_feats_scaled])
 
 models = [
     ("RF", RandomForestRegressor()),
@@ -113,7 +117,7 @@ models = [
     ("LR", LinearRegression())
 ]
 
-x_train, x_test, y_train, y_test = train_test_split(xp, y, test_size=0.2)
+x_train, x_test, y_train, y_test = train_test_split(xp, y, test_size=0.2, random_state=42)
 
 model_performance = {}
 
