@@ -4,18 +4,58 @@ from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import RandomForestRegressor, AdaBoostRegressor
 from sklearn.neighbors import KNeighborsRegressor
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression, Ridge, BayesianRidge, Lasso
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.svm import SVR
+from sklearn.neural_network import MLPRegressor
+
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 
-import json
+# PRE-PROCESAMIENTO DE OBRAS PUBLICAS
+
+mopc_df = pd.read_csv('Nominas/nomina_mopc.csv')
+mopc_df.dropna(inplace=True)
+
+mopc_df['INSTITUCION'] = 'MINISTERIO DE OBRAS PUBLICAS'
+
+columns_to_drop = ['Empleado', 'Tipo de Empleado', 'Otros descuentos', 'Carrera Adm', 'Tipo de Empleado/Cargo', 'Ingreso Neto']
+mopc_df.drop(columns=columns_to_drop, inplace=True)
+
+column_mapping = {
+    'Cargo': 'FUNCION',
+    'Departamento': 'DEPARTAMENTO',
+    'Genero': 'GENERO',
+    'Descuento AFP': 'AFP',
+    'Descuento ISR': 'ISR',
+    'Descuento SFS': 'SFS',
+    ' Ingreso Bruto ': 'SUELDO_BRUTO'
+}
+
+mopc_df.rename(columns=column_mapping, inplace=True)
+
+mopc_df['SUELDO_BRUTO'] = mopc_df['SUELDO_BRUTO'].str.replace(',', '')
+mopc_df['ISR'] = mopc_df['ISR'].str.replace(',', '')
+mopc_df['AFP'] = mopc_df['AFP'].str.replace(',', '')
+mopc_df['SFS'] = mopc_df['SFS'].str.replace(',', '')
+
+mopc_df['SUELDO_BRUTO'] = pd.to_numeric(mopc_df['SUELDO_BRUTO'], errors='coerce')
+mopc_df['ISR'] = pd.to_numeric(mopc_df['ISR'], errors='coerce')
+mopc_df['AFP'] = pd.to_numeric(mopc_df['AFP'], errors='coerce')
+mopc_df['SFS'] = pd.to_numeric(mopc_df['SFS'], errors='coerce')
+
+mopc_df.fillna(0, inplace=True)
+
+mopc_df['SUELDO_NETO'] = mopc_df['SUELDO_BRUTO'] - mopc_df['AFP'] - mopc_df['SFS'] - mopc_df['ISR']
+
+# PRE-PROCESAMIENTO DE LA NOMINA DE MIGRACION
 
 dgm_df = pd.read_csv('Nominas/nomina_dgm.csv')
 dgm_df = dgm_df.iloc[:, :-2]
 
-dgm_column_names = dgm_df.columns
-column_names_list = dgm_column_names.tolist()
+column_names_list = dgm_df.columns.tolist()
+
 
 new_column_names = [column.strip().replace(' ', '_') for column in column_names_list]
 rename_dict = {old_name: new_name for old_name, new_name in zip(column_names_list, new_column_names)}
@@ -44,89 +84,66 @@ dgm_df['INSTITUCION'] = 'DIRECCION GENERAL DE MIGRACION'
 non_essential_columns = ['NOMBRE', 'ESTATUS', 'TOTAL_DESC.', 'NETO', 'OTROS_DESC.']
 dgm_df = dgm_df.drop(columns=non_essential_columns)
 
-# numeric_columns = dgm_df.select_dtypes(include=['float64', 'int64']).columns
-#
-# # Increase the figure size here by increasing the width and height
-# fig, axs = plt.subplots(len(numeric_columns), 3, figsize=(20, 8 * len(numeric_columns)))
-#
-# for i, column in enumerate(numeric_columns):
-#     # Histogram
-#     axs[i, 0].hist(dgm_df[column], bins=20, color='skyblue', edgecolor='black')
-#     axs[i, 0].set_xlabel(column)
-#     axs[i, 0].set_ylabel('FRECUENCIA')
-#     axs[i, 0].set_title(f'HISTOGRAMA DE {column}')
-#
-#     # KDE plot
-#     dgm_df[column].plot.kde(ax=axs[i, 1], color='skyblue')
-#     axs[i, 1].set_xlabel(column)
-#     axs[i, 1].set_ylabel('DENSIDAD')
-#     axs[i, 1].set_title(f'ESTIMACION DE DENSIDAD DEL NUCLEO DE {column}')
-#
-#     # Box plot
-#     axs[i, 2].boxplot(dgm_df[column])
-#     axs[i, 2].set_xlabel(column)
-#     axs[i, 2].set_title(f'DIAGRAMA DE CAJA DE {column}')
-#
-#     # # Print statistics
-#     # statistics = dgm_df[column].describe()
-#     # print(f"\nEstadísticas de {column}:")
-#     # print(statistics)
-#
-# plt.subplots_adjust(hspace=0.5, wspace=0.3)
-# plt.show()
+# CONCATENANDO DATAFRAMES
 
-ohe = OneHotEncoder()
+final_df = pd.concat([mopc_df, dgm_df])
+final_df.reset_index(drop=True, inplace=True)
+
+ohe = OneHotEncoder(handle_unknown='ignore')
 sts = StandardScaler()
 
-# encoder_dict = {}
-# for column in dgm_df.select_dtypes(include=['object']).columns:
-#     encoded_data = ohe.fit_transform(dgm_df[[column]]).toarray()
-#     encoded_df = pd.DataFrame(encoded_data, columns=[f'{column}_{cat}' for cat in ohe.categories_[0]],
-#                               index=dgm_df.index)
-#     dgm_df = pd.concat([dgm_df, encoded_df], axis=1)
-#     encoder_dict[column] = {str(cat): i for i, cat in enumerate(ohe.categories_[0])}
-#
-# with open('encoder_dict.json', 'w') as f:
-#     json.dump(encoder_dict, f)
+# Ajustar el codificador OneHotEncoder con todas las categorías de los datos completos
+cat_feats = final_df.select_dtypes("object")
+ohe.fit(cat_feats)
 
-features = [
-    "GENERO",
-    "DEPARTAMENTO",
-    "FUNCION"
-]
+features = ["GENERO", "DEPARTAMENTO", "FUNCION", "SUELDO_BRUTO", "AFP", "ISR", "SFS", "INSTITUCION"]
 target = "SUELDO_NETO"
 
-x, y = dgm_df[features], dgm_df[target]
+# Dividir los datos en conjuntos de entrenamiento/validación y prueba
+train_val_df, test_df = train_test_split(final_df, test_size=0.2, random_state=42)
 
-# Encode categorical features and scale numerical features
-cat_feats = dgm_df.select_dtypes("object")
-num_feats = dgm_df.select_dtypes(['float64', 'int64']).drop(columns=[target])  # Exclude the target
+# Preprocesar los datos de entrenamiento/validación
+x_train_val, y_train_val = train_val_df[features], train_val_df[target]
+cat_feats_train_val = train_val_df.select_dtypes("object")
+num_feats_train_val = train_val_df.select_dtypes(['float64', 'int64']).drop(columns=[target])
 
-# Fit transform the categorical features
-cat_feats_encoded = ohe.fit_transform(cat_feats).toarray()
+cat_feats_encoded_train_val = ohe.transform(cat_feats_train_val).toarray()
+num_feats_scaled_train_val = sts.fit_transform(num_feats_train_val)
+xp_train_val = np.hstack([cat_feats_encoded_train_val, num_feats_scaled_train_val])
 
-# Fit transform the numerical features
-num_feats_scaled = sts.fit_transform(num_feats)
+# Preprocesar los datos de prueba utilizando los mismos transformadores
+x_test, y_test = test_df[features], test_df[target]
+cat_feats_test = test_df.select_dtypes("object")
+num_feats_test = test_df.select_dtypes(['float64', 'int64']).drop(columns=[target])
 
-# Horizontally stack the features
-xp = np.hstack([cat_feats_encoded, num_feats_scaled])
+cat_feats_encoded_test = ohe.transform(cat_feats_test).toarray()
+num_feats_scaled_test = sts.transform(num_feats_test)
+xp_test = np.hstack([cat_feats_encoded_test, num_feats_scaled_test])
 
 models = [
-    ("RF", RandomForestRegressor()),
-    ("KNN", KNeighborsRegressor()),
-    ("LR", LinearRegression())
+    ("Linear Regression", LinearRegression()),
+    ("Ridge Regression", Ridge()),
+    ("Bayesian Ridge Regression", BayesianRidge()),
+    ("Lasso Regression", Lasso()),
+    ("Nearest Neighbors Regression", KNeighborsRegressor()),
+    ("Decision Tree Regression", DecisionTreeRegressor()),
+    ("Random Forest Regression", RandomForestRegressor()),
+    ("SVM Regression", SVR()),
+    ("Neural Network MLP Regression", MLPRegressor()),
+    ("AdaBoost Regression", AdaBoostRegressor())
 ]
 
-x_train, x_test, y_train, y_test = train_test_split(xp, y, test_size=0.2, random_state=42)
+# Dividir los datos en conjuntos de entrenamiento, validación y prueba
+x_train, x_val, y_train, y_val = train_test_split(xp_train_val, y_train_val, test_size=0.25, random_state=42)
 
 model_performance = {}
 
 for name, model in models:
     print(name)
     model.fit(x_train, y_train)
-    y_pred = model.predict(x_test)
-    mae = mean_absolute_error(y_pred, y_test)
-    mse = mean_squared_error(y_pred, y_test)
+    y_pred_val = model.predict(x_val)
+    mae = mean_absolute_error(y_pred_val, y_val)
+    mse = mean_squared_error(y_pred_val, y_val)
     model_performance[name] = {'MAE': mae, 'MSE': mse}
     print("MAE:", mae)
     print("MSE:", mse)
@@ -136,22 +153,14 @@ best_model_name = min(model_performance, key=lambda k: model_performance[k]['MAE
 best_model = [model for name, model in models if name == best_model_name][0]
 print(f"Best Model: {best_model_name}")
 
-y_pred_best = best_model.predict(x_test)
+# Hacer predicciones en el conjunto de prueba con el mejor modelo
+y_pred_test = best_model.predict(xp_test)
 
+# Imprimir predicciones y valores reales
 results_df = pd.concat([
-    x.loc[y_test.index].reset_index(drop=True),  # Test features
-    y_test.reset_index(drop=True),               # True labels
-    pd.Series(y_pred_best, name="Predicted")     # Predictions from best model
+    x_test.reset_index(drop=True),
+    y_test.reset_index(drop=True),
+    pd.Series(y_pred_test, name="Predicted")
 ], axis=1)
 
-print(results_df)
-
-
-# print(xp)
-
-# print(dgm_df.info())
-# print(dgm_df.describe())
-# dgm_df["FUNCION"].value_counts().plot.bar()
-# print(dgm_df.shape)
-
-
+print(results_df[['SUELDO_NETO', 'Predicted']])
