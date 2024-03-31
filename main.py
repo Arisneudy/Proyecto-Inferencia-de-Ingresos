@@ -35,13 +35,14 @@ dgm_df['ISR'] = pd.to_numeric(dgm_df['ISR'], errors='coerce')
 dgm_df['AFP'] = pd.to_numeric(dgm_df['AFP'], errors='coerce')
 dgm_df['SFS'] = pd.to_numeric(dgm_df['SFS'], errors='coerce')
 
+dgm_df.fillna(0, inplace=True)
+
 dgm_df['SUELDO_NETO'] = dgm_df['SUELDO_BRUTO'] - dgm_df['AFP'] - dgm_df['SFS'] - dgm_df['ISR']
+
 dgm_df['INSTITUCION'] = 'DIRECCION GENERAL DE MIGRACION'
 
 non_essential_columns = ['NOMBRE', 'ESTATUS', 'TOTAL_DESC.', 'NETO', 'OTROS_DESC.']
 dgm_df = dgm_df.drop(columns=non_essential_columns)
-
-dgm_df.fillna(0, inplace=True)
 
 # numeric_columns = dgm_df.select_dtypes(include=['float64', 'int64']).columns
 #
@@ -139,7 +140,7 @@ results_df = pd.concat([
     pd.Series(y_pred_best, name="Predicted")     # Predictions from best model
 ], axis=1)
 
-# print(results_df)
+print(results_df)
 
 
 # print(xp)
