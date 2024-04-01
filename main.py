@@ -15,7 +15,44 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error
 
 
 
+# PRE-PROCESAMIENTO DE NOMINA DE TURISMO(TURISMO)
+turismo_df = pd.read_csv('Nominas/nomina_turismo.csv')
+turismo_df = turismo_df.iloc[:, :-1] # Eliminar la última columna que no tiene datos
 
+# Eliminar columnas no necesarias
+colums_to_drop = ['NO.', 'NOMBRE', 'GRUPO OCUPACIONAL', 'INICIO CONTRATO', 'Otros Descuentos', 'Sueldo Neto', 'Total Descuentos']
+turismo_df.drop(columns=colums_to_drop, inplace=True)
+
+# Renombrar columnas
+column_mapping = {
+    'SEXO': 'GENERO',
+    'CARGO': 'FUNCION',
+    'UNIDAD': 'DEPARTAMENTO',
+    'SALARIO RD$': 'SUELDO_BRUTO',
+    'AFP': 'AFP',
+    'Impuesto Sobre Renta ISR': 'ISR',
+    'Seguro Familiar Salud SFS': 'SFS',
+}
+
+turismo_df.rename(columns=column_mapping, inplace=True)
+
+# Eliminar caracteres no deseados
+turismo_df['SUELDO_BRUTO'] = turismo_df['SUELDO_BRUTO'].str.replace(',', '')
+turismo_df['AFP'] = turismo_df['AFP'].str.replace(',', '')
+turismo_df['ISR'] = turismo_df['ISR'].str.replace(',', '')
+turismo_df['SFS'] = turismo_df['SFS'].str.replace(',', '')
+
+# Convertir columnas a tipo numérico
+num_cols = ['SUELDO_BRUTO', 'AFP', 'ISR', 'SFS']
+turismo_df[num_cols] = turismo_df[num_cols].apply(pd.to_numeric)
+
+turismo_df.fillna(0, inplace=True)
+
+# Agregar la columna INSTITUCION
+turismo_df['INSTITUCION'] = 'Ministerio de Turismo'
+
+# Calcular el sueldo neto y agregarlo al dataframe
+turismo_df['SUELDO_NETO'] = turismo_df['SUELDO_BRUTO'] - turismo_df['AFP'] - turismo_df['SFS'] - turismo_df['ISR']
 
 
 
