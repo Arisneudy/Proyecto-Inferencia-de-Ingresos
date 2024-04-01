@@ -12,7 +12,7 @@ from sklearn.neural_network import MLPRegressor
 
 import matplotlib.pyplot as plt
 
-from sklearn.metrics import mean_absolute_error, mean_squared_error
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
 
 # PRE-PROCESAMIENTO DE NOMINA DE SENASA(SENASA)
@@ -301,7 +301,6 @@ for name, model in models:
     print("MSE:", mse)
     print("")
 
-
 best_model_name = min(model_performance, key=lambda k: model_performance[k]['MAE'])
 best_model = next(model for model_name, model in models if model_name == best_model_name)
 
@@ -309,6 +308,17 @@ print(f"Best Model: {best_model_name}")
 
 # Hacer predicciones en el conjunto de prueba con el mejor modelo
 y_pred_test = best_model.predict(xp_test)
+
+mae_test = mean_absolute_error(y_test, y_pred_test).round(2)
+mse_test = mean_squared_error(y_test, y_pred_test)
+r2_test = r2_score(y_test, y_pred_test)
+
+model_performance = {}
+model_performance[best_model_name] = {'MAE': mae_test, 'MSE': mse_test, 'R^2_Test': r2_test}
+
+print("Model Performance:")
+print(model_performance)
+print("")
 
 # Imprimir predicciones y valores reales
 results_df = pd.concat([
