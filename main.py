@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.model_selection import train_test_split
-import matplotlib.pyplot as plt
 
 from sklearn.ensemble import RandomForestRegressor, AdaBoostRegressor
 from sklearn.neighbors import KNeighborsRegressor
@@ -13,7 +12,15 @@ from sklearn.neural_network import MLPRegressor
 
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 
-# PRE-PROCESAMIENTO DE OBRAS PUBLICAS
+
+
+
+
+
+
+
+
+# PRE-PROCESAMIENTO DE NOMINA DE OBRAS PUBLICAS(MOPC)
 
 mopc_df = pd.read_csv('Nominas/nomina_mopc.csv')
 mopc_df.dropna(inplace=True)
@@ -49,7 +56,12 @@ mopc_df.fillna(0, inplace=True)
 
 mopc_df['SUELDO_NETO'] = mopc_df['SUELDO_BRUTO'] - mopc_df['AFP'] - mopc_df['SFS'] - mopc_df['ISR']
 
-# PRE-PROCESAMIENTO DE LA NOMINA DE MIGRACION
+
+
+
+
+
+# PRE-PROCESAMIENTO DE NOMINA DE MIGRACION(DGM)
 
 dgm_df = pd.read_csv('Nominas/nomina_dgm.csv')
 dgm_df = dgm_df.iloc[:, :-2]
@@ -86,14 +98,18 @@ dgm_df = dgm_df.drop(columns=non_essential_columns)
 
 # CONCATENANDO DATAFRAMES
 
-final_df = pd.concat([mopc_df, dgm_df])
+print(mopc_df.info())
+print(dgm_df.info())
+print(turismo_df.info())
+
+final_df = pd.concat([mopc_df, dgm_df, turismo_df])
 final_df.reset_index(drop=True, inplace=True)
 
 ohe = OneHotEncoder(handle_unknown='ignore')
 sts = StandardScaler()
 
 # Ajustar el codificador OneHotEncoder con todas las categorías de los datos completos
-cat_feats = final_df.select_dtypes("object")
+cat_feats = final_df.select_dtypes("object").astype(str)
 ohe.fit(cat_feats)
 
 features = ["GENERO", "DEPARTAMENTO", "FUNCION", "SUELDO_BRUTO", "AFP", "ISR", "SFS", "INSTITUCION"]
@@ -164,3 +180,5 @@ results_df = pd.concat([
 ], axis=1)
 
 print(results_df[['SUELDO_NETO', 'Predicted']])
+
+
