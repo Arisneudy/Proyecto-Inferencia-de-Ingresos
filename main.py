@@ -10,6 +10,8 @@ from sklearn.tree import DecisionTreeRegressor
 from sklearn.svm import SVR
 from sklearn.neural_network import MLPRegressor
 
+import matplotlib.pyplot as plt
+
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 
 
@@ -54,9 +56,6 @@ turismo_df['INSTITUCION'] = 'Ministerio de Turismo'
 # Calcular el sueldo neto y agregarlo al dataframe
 turismo_df['SUELDO_NETO'] = turismo_df['SUELDO_BRUTO'] - turismo_df['AFP'] - turismo_df['SFS'] - turismo_df['ISR']
 
-
-
-
 # PRE-PROCESAMIENTO DE NOMINA DE OBRAS PUBLICAS(MOPC)
 
 mopc_df = pd.read_csv('Nominas/nomina_mopc.csv')
@@ -93,18 +92,12 @@ mopc_df.fillna(0, inplace=True)
 
 mopc_df['SUELDO_NETO'] = mopc_df['SUELDO_BRUTO'] - mopc_df['AFP'] - mopc_df['SFS'] - mopc_df['ISR']
 
-
-
-
-
-
 # PRE-PROCESAMIENTO DE NOMINA DE MIGRACION(DGM)
 
 dgm_df = pd.read_csv('Nominas/nomina_dgm.csv')
 dgm_df = dgm_df.iloc[:, :-2]
 
 column_names_list = dgm_df.columns.tolist()
-
 
 new_column_names = [column.strip().replace(' ', '_') for column in column_names_list]
 rename_dict = {old_name: new_name for old_name, new_name in zip(column_names_list, new_column_names)}
@@ -133,14 +126,43 @@ dgm_df['INSTITUCION'] = 'DIRECCION GENERAL DE MIGRACION'
 non_essential_columns = ['NOMBRE', 'ESTATUS', 'TOTAL_DESC.', 'NETO', 'OTROS_DESC.']
 dgm_df = dgm_df.drop(columns=non_essential_columns)
 
-# CONCATENANDO DATAFRAMES
 
-print(mopc_df.info())
-print(dgm_df.info())
-print(turismo_df.info())
+# CONCATENANDO DATAFRAMES
 
 final_df = pd.concat([mopc_df, dgm_df, turismo_df])
 final_df.reset_index(drop=True, inplace=True)
+
+# Graficos
+
+numeric_columns = dgm_df.select_dtypes(include=['float64', 'int64']).columns
+
+fig, axs = plt.subplots(len(numeric_columns), 3, figsize=(20, 8 * len(numeric_columns)))
+
+for i, column in enumerate(numeric_columns):
+    # Histogram
+    axs[i, 0].hist(dgm_df[column], bins=20, color='skyblue', edgecolor='black')
+    axs[i, 0].set_xlabel(column)
+    axs[i, 0].set_ylabel('FRECUENCIA')
+    axs[i, 0].set_title(f'HISTOGRAMA DE {column}')
+
+    # KDE plot
+    dgm_df[column].plot.kde(ax=axs[i, 1], color='skyblue')
+    axs[i, 1].set_xlabel(column)
+    axs[i, 1].set_ylabel('DENSIDAD')
+    axs[i, 1].set_title(f'ESTIMACION DE DENSIDAD DEL NUCLEO DE {column}')
+
+    # Box plot
+    axs[i, 2].boxplot(dgm_df[column])
+    axs[i, 2].set_xlabel(column)
+    axs[i, 2].set_title(f'DIAGRAMA DE CAJA DE {column}')
+
+    # Print statistics
+    statistics = dgm_df[column].describe()
+    print(f"\nEstadísticas de {column}:")
+    print(statistics)
+
+plt.subplots_adjust(hspace=0.5, wspace=0.3)
+plt.show()
 
 ohe = OneHotEncoder(handle_unknown='ignore')
 sts = StandardScaler()
