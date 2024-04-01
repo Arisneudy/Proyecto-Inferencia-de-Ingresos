@@ -233,9 +233,9 @@ for i, column in enumerate(numeric_columns):
     axs[i, 2].set_title(f'DIAGRAMA DE CAJA DE {column}')
 
     # Print statistics
-    statistics = dgm_df[column].describe()
-    print(f"\nEstadísticas de {column}:")
-    print(statistics)
+    # statistics = dgm_df[column].describe()
+    # print(f"\nEstadísticas de {column}:")
+    # print(statistics)
 
 plt.subplots_adjust(hspace=0.5, wspace=0.3)
 plt.show()
@@ -285,7 +285,7 @@ models = [
 ]
 
 # Dividir los datos en conjuntos de entrenamiento, validación y prueba
-x_train, x_val, y_train, y_val = train_test_split(xp_train_val, y_train_val, test_size=0.25, random_state=42)
+x_train, x_val, y_train, y_val = train_test_split(xp_train_val, y_train_val, test_size=0.10, random_state=20)
 
 model_performance = {}
 
@@ -313,6 +313,12 @@ results_df = pd.concat([
     y_test.reset_index(drop=True),
     pd.Series(y_pred_test, name="Predicted")
 ], axis=1)
+
+results_df['Predicted'] = results_df['Predicted'].round(2)
+
+different_values_df = results_df[results_df['SUELDO_NETO'] != results_df['Predicted']]
+
+print(different_values_df[['SUELDO_NETO', 'Predicted']])
 
 print(results_df[['SUELDO_NETO', 'Predicted']])
 
