@@ -15,6 +15,45 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 
 
+# PRE-PROCESAMIENTO DE NOMINA DE SENASA(SENASA)
+senasa_df = pd.read_csv('Nominas/nomina_senasa.csv')
+
+# Eliminar columnas no necesarias
+colums_to_drop = ['Nombre', 'Estatus', 'Deduciones', 'Neto']
+senasa_df.drop(columns=colums_to_drop, inplace=True)
+
+# Renombrar columnas
+column_mapping = {
+    'Genero': 'GENERO',
+    'Puesto': 'FUNCION',
+    'Departamento': 'DEPARTAMENTO',
+    'Sueldo Fijo': 'SUELDO_BRUTO',
+    'Administracion de Fondo de Pensiones': 'AFP',
+    'Impuestos ': 'ISR',
+    'Seguro Familiar de Salud': 'SFS',
+}
+
+senasa_df.rename(columns=column_mapping, inplace=True)
+
+# Eliminar caracteres no deseados
+senasa_df['SUELDO_BRUTO'] = senasa_df['SUELDO_BRUTO'].str.replace(',', '')
+senasa_df['AFP'] = senasa_df['AFP'].str.replace(',', '')
+senasa_df['ISR'] = senasa_df['ISR'].str.replace(',', '')
+senasa_df['SFS'] = senasa_df['SFS'].str.replace(',', '')
+
+# Convertir columnas a tipo numérico
+num_cols = ['SUELDO_BRUTO', 'AFP', 'ISR', 'SFS']
+senasa_df[num_cols] = senasa_df[num_cols].apply(pd.to_numeric)
+
+senasa_df.fillna(0, inplace=True)
+
+# Agregar la columna INSTITUCION
+senasa_df['INSTITUCION'] = 'SENASA'
+
+# Calcular el sueldo neto y agregarlo al dataframe
+senasa_df['SUELDO_NETO'] = senasa_df['SUELDO_BRUTO'] - senasa_df['AFP'] - senasa_df['SFS'] - senasa_df['ISR']
+
+
 
 
 # PRE-PROCESAMIENTO DE NOMINA DE TURISMO(TURISMO)
@@ -168,7 +207,7 @@ print(cultura_df.describe())
 
 # CONCATENANDO DATAFRAMES
 
-final_df = pd.concat([mopc_df, dgm_df, turismo_df, cultura_df])
+final_df = pd.concat([mopc_df, dgm_df, turismo_df, cultura_df, senasa_df])
 final_df.reset_index(drop=True, inplace=True)
 
 # Graficos
