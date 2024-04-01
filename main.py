@@ -210,25 +210,25 @@ final_df.reset_index(drop=True, inplace=True)
 
 # Graficos
 
-numeric_columns = dgm_df.select_dtypes(include=['float64', 'int64']).columns
+numeric_columns = final_df.select_dtypes(include=['float64', 'int64']).columns
 
 fig, axs = plt.subplots(len(numeric_columns), 3, figsize=(20, 8 * len(numeric_columns)))
 
 for i, column in enumerate(numeric_columns):
     # Histogram
-    axs[i, 0].hist(dgm_df[column], bins=20, color='skyblue', edgecolor='black')
+    axs[i, 0].hist(final_df[column], bins=20, color='skyblue', edgecolor='black')
     axs[i, 0].set_xlabel(column)
     axs[i, 0].set_ylabel('FRECUENCIA')
     axs[i, 0].set_title(f'HISTOGRAMA DE {column}')
 
     # KDE plot
-    dgm_df[column].plot.kde(ax=axs[i, 1], color='skyblue')
+    final_df[column].plot.kde(ax=axs[i, 1], color='skyblue')
     axs[i, 1].set_xlabel(column)
     axs[i, 1].set_ylabel('DENSIDAD')
     axs[i, 1].set_title(f'ESTIMACION DE DENSIDAD DEL NUCLEO DE {column}')
 
     # Box plot
-    axs[i, 2].boxplot(dgm_df[column])
+    axs[i, 2].boxplot(final_df[column])
     axs[i, 2].set_xlabel(column)
     axs[i, 2].set_title(f'DIAGRAMA DE CAJA DE {column}')
 
@@ -285,15 +285,9 @@ models = [
 ]
 
 # Dividir los datos en conjuntos de entrenamiento, validación y prueba
-x_train, x_val, y_train, y_val = train_test_split(xp_train_val, y_train_val, test_size=0.10, random_state=20)
+x_train, x_val, y_train, y_val = train_test_split(xp_train_val, y_train_val, test_size=0.2, random_state=20)
 
 model_performance = {}
-
-def format_large_number(num):
-    if num >= 1e3:
-        return "{:,.2f}".format(num)
-    else:
-        return "{:.2f}".format(num)
 
 for name, model in models:
     print(name)
