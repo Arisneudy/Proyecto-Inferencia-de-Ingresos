@@ -155,7 +155,7 @@ cultura_df['ISR'] = cultura_df['ISR'].str.replace(',', '')
 cultura_df['AFP'] = cultura_df['AFP'].str.replace(',', '')
 cultura_df['SFS'] = cultura_df['SFS'].str.replace(',', '')
 
-cultura_df['SUELDO_BRUTO'] = pd.to_numeric(mopc_df['SUELDO_BRUTO'], errors='coerce')
+cultura_df['SUELDO_BRUTO'] = pd.to_numeric(cultura_df['SUELDO_BRUTO'], errors='coerce')
 cultura_df['ISR'] = pd.to_numeric(cultura_df['ISR'], errors='coerce')
 cultura_df['AFP'] = pd.to_numeric(cultura_df['AFP'], errors='coerce')
 cultura_df['SFS'] = pd.to_numeric(cultura_df['SFS'], errors='coerce')
@@ -163,8 +163,6 @@ cultura_df['SFS'] = pd.to_numeric(cultura_df['SFS'], errors='coerce')
 cultura_df.fillna(0, inplace=True)
 
 cultura_df['SUELDO_NETO'] = cultura_df['SUELDO_BRUTO'] - cultura_df['AFP'] - cultura_df['SFS'] - cultura_df['ISR']
-
-print(cultura_df.describe())
 
 # CONCATENANDO DATAFRAMES
 
