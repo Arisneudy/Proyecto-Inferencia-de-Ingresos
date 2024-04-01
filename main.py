@@ -56,6 +56,8 @@ turismo_df['INSTITUCION'] = 'Ministerio de Turismo'
 # Calcular el sueldo neto y agregarlo al dataframe
 turismo_df['SUELDO_NETO'] = turismo_df['SUELDO_BRUTO'] - turismo_df['AFP'] - turismo_df['SFS'] - turismo_df['ISR']
 
+turismo_df = turismo_df[turismo_df['GENERO'] != 0]
+
 # PRE-PROCESAMIENTO DE NOMINA DE OBRAS PUBLICAS(MOPC)
 
 mopc_df = pd.read_csv('Nominas/nomina_mopc.csv')
