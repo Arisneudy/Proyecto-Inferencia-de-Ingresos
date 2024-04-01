@@ -289,19 +289,28 @@ x_train, x_val, y_train, y_val = train_test_split(xp_train_val, y_train_val, tes
 
 model_performance = {}
 
+def format_large_number(num):
+    if num >= 1e3:
+        return "{:,.2f}".format(num)
+    else:
+        return "{:.2f}".format(num)
+
 for name, model in models:
     print(name)
     model.fit(x_train, y_train)
     y_pred_val = model.predict(x_val)
-    mae = mean_absolute_error(y_pred_val, y_val)
-    mse = mean_squared_error(y_pred_val, y_val)
+    mae = mean_absolute_error(y_pred_val, y_val).round(2)
+    mse = mean_squared_error(y_pred_val, y_val).round(2)
+
     model_performance[name] = {'MAE': mae, 'MSE': mse}
     print("MAE:", mae)
     print("MSE:", mse)
     print("")
 
+
 best_model_name = min(model_performance, key=lambda k: model_performance[k]['MAE'])
-best_model = [model for name, model in models if name == best_model_name][0]
+best_model = next(model for model_name, model in models if model_name == best_model_name)
+
 print(f"Best Model: {best_model_name}")
 
 # Hacer predicciones en el conjunto de prueba con el mejor modelo
@@ -314,6 +323,7 @@ results_df = pd.concat([
     pd.Series(y_pred_test, name="Predicted")
 ], axis=1)
 
+results_df['SUELDO_NETO'] = results_df['SUELDO_NETO'].round(2)
 results_df['Predicted'] = results_df['Predicted'].round(2)
 
 different_values_df = results_df[results_df['SUELDO_NETO'] != results_df['Predicted']]
