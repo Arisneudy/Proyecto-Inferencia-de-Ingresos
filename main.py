@@ -56,6 +56,8 @@ turismo_df['INSTITUCION'] = 'Ministerio de Turismo'
 # Calcular el sueldo neto y agregarlo al dataframe
 turismo_df['SUELDO_NETO'] = turismo_df['SUELDO_BRUTO'] - turismo_df['AFP'] - turismo_df['SFS'] - turismo_df['ISR']
 
+turismo_df = turismo_df[turismo_df['GENERO'] != 0]
+
 # PRE-PROCESAMIENTO DE NOMINA DE OBRAS PUBLICAS(MOPC)
 
 mopc_df = pd.read_csv('Nominas/nomina_mopc.csv')
@@ -126,10 +128,47 @@ dgm_df['INSTITUCION'] = 'DIRECCION GENERAL DE MIGRACION'
 non_essential_columns = ['NOMBRE', 'ESTATUS', 'TOTAL_DESC.', 'NETO', 'OTROS_DESC.']
 dgm_df = dgm_df.drop(columns=non_essential_columns)
 
+# PRE-PROCESAMIENTO DE NOMINA DEL MINISTERIO DE CULTURA
+
+cultura_df = pd.read_csv('Nominas/nomina_cultura.csv')
+cultura_df.dropna(inplace=True)
+
+cultura_df['INSTITUCION'] = 'MINISTERIO DE CULTURA'
+
+columns_to_drop = ['NOMBRE Y APELLIDO', 'CATEGORIA DEL SERVIDOR', 'OTROS DESC', 'INGRESO NETO']
+cultura_df.drop(columns=columns_to_drop, inplace=True)
+
+column_mapping = {
+    'CARGO': 'FUNCION',
+    'DIRECCIÓN O DEPARTAMENTO': 'DEPARTAMENTO',
+    'GENERO': 'GENERO',
+    'AFP': 'AFP',
+    'ISR': 'ISR',
+    'SFS': 'SFS',
+    ' INGRESO BRUTO ': 'SUELDO_BRUTO'
+}
+
+cultura_df.rename(columns=column_mapping, inplace=True)
+
+cultura_df['SUELDO_BRUTO'] = cultura_df['SUELDO_BRUTO'].str.replace(',', '')
+cultura_df['ISR'] = cultura_df['ISR'].str.replace(',', '')
+cultura_df['AFP'] = cultura_df['AFP'].str.replace(',', '')
+cultura_df['SFS'] = cultura_df['SFS'].str.replace(',', '')
+
+cultura_df['SUELDO_BRUTO'] = pd.to_numeric(mopc_df['SUELDO_BRUTO'], errors='coerce')
+cultura_df['ISR'] = pd.to_numeric(cultura_df['ISR'], errors='coerce')
+cultura_df['AFP'] = pd.to_numeric(cultura_df['AFP'], errors='coerce')
+cultura_df['SFS'] = pd.to_numeric(cultura_df['SFS'], errors='coerce')
+
+cultura_df.fillna(0, inplace=True)
+
+cultura_df['SUELDO_NETO'] = cultura_df['SUELDO_BRUTO'] - cultura_df['AFP'] - cultura_df['SFS'] - cultura_df['ISR']
+
+print(cultura_df.describe())
 
 # CONCATENANDO DATAFRAMES
 
-final_df = pd.concat([mopc_df, dgm_df, turismo_df])
+final_df = pd.concat([mopc_df, dgm_df, turismo_df, cultura_df])
 final_df.reset_index(drop=True, inplace=True)
 
 # Graficos
