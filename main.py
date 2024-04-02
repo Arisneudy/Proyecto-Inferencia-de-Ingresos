@@ -212,7 +212,7 @@ final_df.reset_index(drop=True, inplace=True)
 
 numeric_columns = final_df.select_dtypes(include=['float64', 'int64']).columns
 
-fig, axs = plt.subplots(len(numeric_columns), 4, figsize=(20, 20 * len(numeric_columns)))
+fig, axs = plt.subplots(len(numeric_columns), 4, figsize=(20, 8 * len(numeric_columns)))
 
 for i, column in enumerate(numeric_columns):
     # Histogram
