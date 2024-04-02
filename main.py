@@ -14,6 +14,8 @@ import matplotlib.pyplot as plt
 
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
+# ASHANTY
+
 # PRE-PROCESAMIENTO DE NOMINA DE SENASA(SENASA)
 senasa_df = pd.read_csv('Nominas/nomina_senasa.csv')
 
@@ -51,6 +53,9 @@ senasa_df['INSTITUCION'] = 'SENASA'
 
 # Calcular el sueldo neto y agregarlo al dataframe
 senasa_df['SUELDO_NETO'] = senasa_df['SUELDO_BRUTO'] - senasa_df['AFP'] - senasa_df['SFS'] - senasa_df['ISR']
+
+
+
 
 # PRE-PROCESAMIENTO DE NOMINA DE TURISMO(TURISMO)
 turismo_df = pd.read_csv('Nominas/nomina_turismo.csv')
@@ -92,7 +97,7 @@ turismo_df['INSTITUCION'] = 'Ministerio de Turismo'
 # Calcular el sueldo neto y agregarlo al dataframe
 turismo_df['SUELDO_NETO'] = turismo_df['SUELDO_BRUTO'] - turismo_df['AFP'] - turismo_df['SFS'] - turismo_df['ISR']
 
-turismo_df = turismo_df[turismo_df['GENERO'] != 0]
+
 
 # PRE-PROCESAMIENTO DE NOMINA DE OBRAS PUBLICAS(MOPC)
 
@@ -131,6 +136,8 @@ mopc_df.fillna(0, inplace=True)
 
 mopc_df['SUELDO_NETO'] = mopc_df['SUELDO_BRUTO'] - mopc_df['AFP'] - mopc_df['SFS'] - mopc_df['ISR']
 
+
+
 # PRE-PROCESAMIENTO DE NOMINA DE MIGRACION(DGM)
 
 dgm_df = pd.read_csv('Nominas/nomina_dgm.csv')
@@ -164,6 +171,9 @@ dgm_df['INSTITUCION'] = 'DIRECCION GENERAL DE MIGRACION'
 
 non_essential_columns = ['NOMBRE', 'ESTATUS', 'TOTAL_DESC.', 'NETO', 'OTROS_DESC.']
 dgm_df = dgm_df.drop(columns=non_essential_columns)
+
+
+
 
 # PRE-PROCESAMIENTO DE NOMINA DEL MINISTERIO DE CULTURA
 
@@ -201,32 +211,36 @@ cultura_df.fillna(0, inplace=True)
 
 cultura_df['SUELDO_NETO'] = cultura_df['SUELDO_BRUTO'] - cultura_df['AFP'] - cultura_df['SFS'] - cultura_df['ISR']
 
+
+
+
 # CONCATENANDO DATAFRAMES
 
 final_df = pd.concat([mopc_df, dgm_df, turismo_df, cultura_df, senasa_df])
+final_df.drop(columns=['GENERO'], inplace=True)
 final_df.reset_index(drop=True, inplace=True)
 
 # Removiendo outliers usando cuartiles
-numeric_df = final_df.select_dtypes(include=['float64', 'int64'])
+numeric_df = final_df.select_dtypes(include=['float64', 'int64']) # Se seleccionan las columnas numéricas
 
-Q1 = numeric_df.quantile(0.25)
-Q3 = numeric_df.quantile(0.75)
-IQR = Q3 - Q1
+Q1 = numeric_df.quantile(0.25) # Se calcula el primer cuartil
+Q3 = numeric_df.quantile(0.75) # Se calcula el tercer cuartil
+IQR = Q3 - Q1 # Se calcula el rango intercuartil
 
-k = 1.5
+k = 1.5 # Factor de escala
 
-lower_bound = Q1 - k * IQR
-upper_bound = Q3 + k * IQR
+lower_bound = Q1 - k * IQR # Límite inferior
+upper_bound = Q3 + k * IQR # Límite superior
 
-outliers = ((numeric_df < lower_bound) | (numeric_df > upper_bound)).any(axis=1)
+outliers = ((numeric_df < lower_bound) | (numeric_df > upper_bound)).any(axis=1) # Se identifican los outliers en el dataframe final
 
-final_df = final_df[~outliers]
+final_df = final_df[~outliers] # Se eliminan los outliers del dataframe final
 
 # Graficos
 
-numeric_columns = final_df.select_dtypes(include=['float64', 'int64']).columns
+numeric_columns = final_df.select_dtypes(include=['float64', 'int64']).columns # Se seleccionan las columnas numéricas
 
-fig, axs = plt.subplots(len(numeric_columns), 4, figsize=(20, 8 * len(numeric_columns)))
+fig, axs = plt.subplots(len(numeric_columns), 4, figsize=(20, 8 * len(numeric_columns))) # Se crean los subplots para los gráficos que son 4 por columna
 
 for i, column in enumerate(numeric_columns):
     # Histogram
