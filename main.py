@@ -212,7 +212,7 @@ final_df.reset_index(drop=True, inplace=True)
 
 numeric_columns = final_df.select_dtypes(include=['float64', 'int64']).columns
 
-fig, axs = plt.subplots(len(numeric_columns), 3, figsize=(20, 8 * len(numeric_columns)))
+fig, axs = plt.subplots(len(numeric_columns), 4, figsize=(20, 8 * len(numeric_columns)))
 
 for i, column in enumerate(numeric_columns):
     # Histogram
@@ -232,10 +232,17 @@ for i, column in enumerate(numeric_columns):
     axs[i, 2].set_xlabel(column)
     axs[i, 2].set_title(f'DIAGRAMA DE CAJA DE {column}')
 
+    # Scatter plot
+    axs[i, 3].scatter(final_df.index, final_df[column], color='skyblue')
+    axs[i, 3].set_xlabel('Índice')
+    axs[i, 3].set_ylabel(column)
+    axs[i, 3].set_title(f'GRÁFICO DE DISPERSIÓN DE {column}')
+
+
     # Print statistics
-    # statistics = dgm_df[column].describe()
-    # print(f"\nEstadísticas de {column}:")
-    # print(statistics)
+    statistics = final_df[column].describe()
+    print(f"\nEstadísticas de {column}:")
+    print(statistics)
 
 plt.subplots_adjust(hspace=0.5, wspace=0.3)
 plt.show()
