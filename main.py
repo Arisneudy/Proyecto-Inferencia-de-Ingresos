@@ -14,7 +14,6 @@ import matplotlib.pyplot as plt
 
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
-
 # PRE-PROCESAMIENTO DE NOMINA DE SENASA(SENASA)
 senasa_df = pd.read_csv('Nominas/nomina_senasa.csv')
 
@@ -53,15 +52,13 @@ senasa_df['INSTITUCION'] = 'SENASA'
 # Calcular el sueldo neto y agregarlo al dataframe
 senasa_df['SUELDO_NETO'] = senasa_df['SUELDO_BRUTO'] - senasa_df['AFP'] - senasa_df['SFS'] - senasa_df['ISR']
 
-
-
-
 # PRE-PROCESAMIENTO DE NOMINA DE TURISMO(TURISMO)
 turismo_df = pd.read_csv('Nominas/nomina_turismo.csv')
-turismo_df = turismo_df.iloc[:, :-1] # Eliminar la última columna que no tiene datos
+turismo_df = turismo_df.iloc[:, :-1]  # Eliminar la última columna que no tiene datos
 
 # Eliminar columnas no necesarias
-colums_to_drop = ['NO.', 'NOMBRE', 'GRUPO OCUPACIONAL', 'INICIO CONTRATO', 'Otros Descuentos', 'Sueldo Neto', 'Total Descuentos']
+colums_to_drop = ['NO.', 'NOMBRE', 'GRUPO OCUPACIONAL', 'INICIO CONTRATO', 'Otros Descuentos', 'Sueldo Neto',
+                  'Total Descuentos']
 turismo_df.drop(columns=colums_to_drop, inplace=True)
 
 # Renombrar columnas
@@ -104,7 +101,8 @@ mopc_df.dropna(inplace=True)
 
 mopc_df['INSTITUCION'] = 'MINISTERIO DE OBRAS PUBLICAS'
 
-columns_to_drop = ['Empleado', 'Tipo de Empleado', 'Otros descuentos', 'Carrera Adm', 'Tipo de Empleado/Cargo', 'Ingreso Neto']
+columns_to_drop = ['Empleado', 'Tipo de Empleado', 'Otros descuentos', 'Carrera Adm', 'Tipo de Empleado/Cargo',
+                   'Ingreso Neto']
 mopc_df.drop(columns=columns_to_drop, inplace=True)
 
 column_mapping = {
@@ -208,6 +206,22 @@ cultura_df['SUELDO_NETO'] = cultura_df['SUELDO_BRUTO'] - cultura_df['AFP'] - cul
 final_df = pd.concat([mopc_df, dgm_df, turismo_df, cultura_df, senasa_df])
 final_df.reset_index(drop=True, inplace=True)
 
+# Removiendo outliers usando cuartiles
+numeric_df = final_df.select_dtypes(include=['float64', 'int64'])
+
+Q1 = numeric_df.quantile(0.25)
+Q3 = numeric_df.quantile(0.75)
+IQR = Q3 - Q1
+
+k = 1.5
+
+lower_bound = Q1 - k * IQR
+upper_bound = Q3 + k * IQR
+
+outliers = ((numeric_df < lower_bound) | (numeric_df > upper_bound)).any(axis=1)
+
+final_df = final_df[~outliers]
+
 # Graficos
 
 numeric_columns = final_df.select_dtypes(include=['float64', 'int64']).columns
@@ -238,7 +252,6 @@ for i, column in enumerate(numeric_columns):
     axs[i, 3].set_ylabel(column)
     axs[i, 3].set_title(f'GRÁFICO DE DISPERSIÓN DE {column}')
 
-
     # Print statistics
     statistics = final_df[column].describe()
     print(f"\nEstadísticas de {column}:")
@@ -247,8 +260,9 @@ for i, column in enumerate(numeric_columns):
 plt.subplots_adjust(hspace=0.5, wspace=0.3)
 plt.show()
 
-ohe = OneHotEncoder(handle_unknown='ignore') # OneHotEncoder para codificar las características categóricas en numéricas
-sts = StandardScaler() # Estandarizar las características numéricas
+ohe = OneHotEncoder(
+    handle_unknown='ignore')  # OneHotEncoder para codificar las características categóricas en numéricas
+sts = StandardScaler()  # Estandarizar las características numéricas
 
 # Ajustar el codificador OneHotEncoder con todas las categorías de los datos completos
 cat_feats = final_df.select_dtypes("object").astype(str)
@@ -300,28 +314,31 @@ for name, model in models:
     print(name)
     model.fit(x_train, y_train)
     y_pred_val = model.predict(x_val)
-    mae = mean_absolute_error(y_pred_val, y_val).round(2) # Se calcula el error absoluto medio (MAE)
-    mse = mean_squared_error(y_pred_val, y_val).round(2) # Se calcula el error cuadrático medio (MSE)
+    mae = mean_absolute_error(y_pred_val, y_val).round(2)  # Se calcula el error absoluto medio (MAE)
+    mse = mean_squared_error(y_pred_val, y_val).round(2)  # Se calcula el error cuadrático medio (MSE)
 
     model_performance[name] = {'MAE': mae, 'MSE': mse}
     print("MAE:", mae)
     print("MSE:", mse)
     print("")
 
-best_model_name = min(model_performance, key=lambda k: model_performance[k]['MAE']) # Se selecciona el modelo con el menor MAE
-best_model = next(model for model_name, model in models if model_name == best_model_name) # Se obtiene el modelo con el menor MAE
+best_model_name = min(model_performance,
+                      key=lambda k: model_performance[k]['MAE'])  # Se selecciona el modelo con el menor MAE
+best_model = next(
+    model for model_name, model in models if model_name == best_model_name)  # Se obtiene el modelo con el menor MAE
 
 print(f"Best Model: {best_model_name}")
 
 # Hacer predicciones en el conjunto de prueba con el mejor modelo
-y_pred_test = best_model.predict(xp_test) # Se hacen predicciones en el conjunto de prueba
+y_pred_test = best_model.predict(xp_test)  # Se hacen predicciones en el conjunto de prueba
 
-mae_test = mean_absolute_error(y_test, y_pred_test).round(2) # Se calcula el error absoluto medio (MAE) en el conjunto de prueba
-mse_test = mean_squared_error(y_test, y_pred_test) # Se calcula el error cuadrático medio (MSE) en el conjunto de prueba
-r2_test = r2_score(y_test, y_pred_test) # Se calcula el coeficiente de determinación (R^2) en el conjunto de prueba
+mae_test = mean_absolute_error(y_test, y_pred_test).round(
+    2)  # Se calcula el error absoluto medio (MAE) en el conjunto de prueba
+mse_test = mean_squared_error(y_test,
+                              y_pred_test)  # Se calcula el error cuadrático medio (MSE) en el conjunto de prueba
+r2_test = r2_score(y_test, y_pred_test)  # Se calcula el coeficiente de determinación (R^2) en el conjunto de prueba
 
-model_performance = {}
-model_performance[best_model_name] = {'MAE': mae_test, 'MSE': mse_test, 'R^2_Test': r2_test} # Se almacenan las métricas de desempeño del mejor modelo
+model_performance = {best_model_name: {'MAE': mae_test, 'MSE': mse_test, 'R^2_Test': r2_test}}
 
 print("Model Performance:")
 print(model_performance)
@@ -332,15 +349,13 @@ results_df = pd.concat([
     x_test.reset_index(drop=True),
     y_test.reset_index(drop=True),
     pd.Series(y_pred_test, name="Predicted")
-], axis=1) # Se concatenan los datos de prueba, los valores reales y las predicciones
+], axis=1)  # Se concatenan los datos de prueba, los valores reales y las predicciones
 
-results_df['SUELDO_NETO'] = results_df['SUELDO_NETO'].round(2) # Se redondean los valores de SUELDO_NETO
-results_df['Predicted'] = results_df['Predicted'].round(2) # Se redondean los valores predichos
+results_df['SUELDO_NETO'] = results_df['SUELDO_NETO'].round(2)  # Se redondean los valores de SUELDO_NETO
+results_df['Predicted'] = results_df['Predicted'].round(2)  # Se redondean los valores predichos
 
 different_values_df = results_df[results_df['SUELDO_NETO'] != results_df['Predicted']]
 
 print(different_values_df[['SUELDO_NETO', 'Predicted']])
 
 print(results_df[['SUELDO_NETO', 'Predicted']])
-
-
