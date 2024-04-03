@@ -46,7 +46,7 @@ senasa_df['SFS'] = senasa_df['SFS'].str.replace(',', '')
 num_cols = ['SUELDO_BRUTO', 'AFP', 'ISR', 'SFS']
 senasa_df[num_cols] = senasa_df[num_cols].apply(pd.to_numeric)
 
-senasa_df.fillna(0, inplace=True)
+senasa_df.fillna(0, inplace=True) # Aqui se rellenan los valores nulos con 0
 
 # Agregar la columna INSTITUCION
 senasa_df['INSTITUCION'] = 'SENASA'
@@ -216,9 +216,9 @@ cultura_df['SUELDO_NETO'] = cultura_df['SUELDO_BRUTO'] - cultura_df['AFP'] - cul
 
 # CONCATENANDO DATAFRAMES
 
-final_df = pd.concat([mopc_df, dgm_df, turismo_df, cultura_df, senasa_df])
-final_df.drop(columns=['GENERO'], inplace=True)
-final_df.reset_index(drop=True, inplace=True)
+final_df = pd.concat([mopc_df, dgm_df, turismo_df, cultura_df, senasa_df]) # Se concatenan los dataframes
+final_df.drop(columns=['GENERO'], inplace=True) # Se elimina la columna GÉNERO
+final_df.reset_index(drop=True, inplace=True) # Se resetea el índice
 
 # Removiendo outliers usando cuartiles
 numeric_df = final_df.select_dtypes(include=['float64', 'int64']) # Se seleccionan las columnas numéricas
@@ -235,6 +235,9 @@ upper_bound = Q3 + k * IQR # Límite superior
 outliers = ((numeric_df < lower_bound) | (numeric_df > upper_bound)).any(axis=1) # Se identifican los outliers en el dataframe final
 
 final_df = final_df[~outliers] # Se eliminan los outliers del dataframe final
+
+
+
 
 # Graficos
 
@@ -273,6 +276,22 @@ for i, column in enumerate(numeric_columns):
 
 plt.subplots_adjust(hspace=0.5, wspace=0.3)
 plt.show()
+
+# Ordenar el DataFrame final_df por SUELDO_NETO en orden descendente
+sorted_df = final_df.sort_values(by='SUELDO_NETO', ascending=False)
+
+# Seleccionar las primeras 10 filas para visualizar
+top_10_richest = sorted_df.head(10)
+
+# Crear una gráfica de barras para visualizar los 10 empleados con el sueldo más alto
+plt.figure(figsize=(25, 10))
+plt.barh(top_10_richest['FUNCION'], top_10_richest['SUELDO_NETO'], color='skyblue')
+plt.xlabel('Sueldo Neto')
+plt.ylabel('Funcion')
+plt.title('Top 10 Empleados con el Sueldo Más Alto')
+plt.show()
+
+
 
 ohe = OneHotEncoder(
     handle_unknown='ignore')  # OneHotEncoder para codificar las características categóricas en numéricas
@@ -322,18 +341,20 @@ models = [
 # Dividir los datos en conjuntos de entrenamiento, validación y prueba
 x_train, x_val, y_train, y_val = train_test_split(xp_train_val, y_train_val, test_size=0.2, random_state=42)
 
-model_performance = {}
+# -------- ARISNEUDY --------
+
+model_performance = {} # Diccionario para almacenar el rendimiento de los modelos
 
 for name, model in models:
     print(name)
-    model.fit(x_train, y_train)
-    y_pred_val = model.predict(x_val)
+    model.fit(x_train, y_train) # Se ajusta el modelo con los datos de entrenamiento
+    y_pred_val = model.predict(x_val) # Se hacen predicciones en el conjunto de validación
     mae = mean_absolute_error(y_pred_val, y_val).round(2)  # Se calcula el error absoluto medio (MAE)
     mse = mean_squared_error(y_pred_val, y_val).round(2)  # Se calcula el error cuadrático medio (MSE)
 
-    model_performance[name] = {'MAE': mae, 'MSE': mse}
-    print("MAE:", mae)
-    print("MSE:", mse)
+    model_performance[name] = {'MAE': mae, 'MSE': mse} # Se almacenan los resultados en un diccionario de rendimiento
+    print("MAE:", mae) # Se imprime el MAE
+    print("MSE:", mse) # Se imprime el MSE
     print("")
 
 best_model_name = min(model_performance,
@@ -341,7 +362,7 @@ best_model_name = min(model_performance,
 best_model = next(
     model for model_name, model in models if model_name == best_model_name)  # Se obtiene el modelo con el menor MAE
 
-print(f"Best Model: {best_model_name}")
+print(f"Best Model: {best_model_name}") # Se imprime el nombre del mejor modelo
 
 # Hacer predicciones en el conjunto de prueba con el mejor modelo
 y_pred_test = best_model.predict(xp_test)  # Se hacen predicciones en el conjunto de prueba
@@ -357,6 +378,8 @@ model_performance = {best_model_name: {'MAE': mae_test, 'MSE': mse_test, 'R^2_Te
 print("Model Performance:")
 print(model_performance)
 print("")
+
+# -------- ARISNEUDY --------
 
 # Imprimir predicciones y valores reales
 results_df = pd.concat([
