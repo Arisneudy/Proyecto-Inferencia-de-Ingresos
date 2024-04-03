@@ -362,8 +362,6 @@ print("Model Performance:")
 print(model_performance)
 print("")
 
-# -------- ARISNEUDY --------
-
 # Imprimir predicciones y valores reales
 results_df = pd.concat([
     x_test.reset_index(drop=True),
