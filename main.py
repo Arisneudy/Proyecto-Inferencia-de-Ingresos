@@ -229,8 +229,8 @@ IQR = Q3 - Q1 # Se calcula el rango intercuartil
 
 k = 1.5 # Factor de escala
 
-lower_bound = Q1 - k * IQR # Límite inferior
-upper_bound = Q3 + k * IQR # Límite superior
+lower_bound = Q1 # Límite inferior
+upper_bound = Q3 # Límite superior
 
 outliers = ((numeric_df < lower_bound) | (numeric_df > upper_bound)).any(axis=1) # Se identifican los outliers en el dataframe final
 
@@ -277,22 +277,6 @@ for i, column in enumerate(numeric_columns):
 plt.subplots_adjust(hspace=0.5, wspace=0.3)
 plt.show()
 
-# Ordenar el DataFrame final_df por SUELDO_NETO en orden descendente
-sorted_df = final_df.sort_values(by='SUELDO_NETO', ascending=False)
-
-# Seleccionar las primeras 10 filas para visualizar
-top_10_richest = sorted_df.head(10)
-
-# Crear una gráfica de barras para visualizar los 10 empleados con el sueldo más alto
-plt.figure(figsize=(25, 10))
-plt.barh(top_10_richest['FUNCION'], top_10_richest['SUELDO_NETO'], color='skyblue')
-plt.xlabel('Sueldo Neto')
-plt.ylabel('Funcion')
-plt.title('Top 10 Empleados con el Sueldo Más Alto')
-plt.show()
-
-
-
 ohe = OneHotEncoder(
     handle_unknown='ignore')  # OneHotEncoder para codificar las características categóricas en numéricas
 sts = StandardScaler()  # Estandarizar las características numéricas
@@ -301,7 +285,7 @@ sts = StandardScaler()  # Estandarizar las características numéricas
 cat_feats = final_df.select_dtypes("object").astype(str)
 ohe.fit(cat_feats)
 
-features = ["DEPARTAMENTO", "FUNCION", "SUELDO_BRUTO", "AFP", "ISR", "SFS", "INSTITUCION"]
+features = ["DEPARTAMENTO", "FUNCION", "INSTITUCION"]
 target = "SUELDO_NETO"
 
 # Dividir los datos en conjuntos de entrenamiento/validación y prueba
@@ -341,7 +325,6 @@ models = [
 # Dividir los datos en conjuntos de entrenamiento, validación y prueba
 x_train, x_val, y_train, y_val = train_test_split(xp_train_val, y_train_val, test_size=0.2, random_state=42)
 
-# -------- ARISNEUDY --------
 
 model_performance = {} # Diccionario para almacenar el rendimiento de los modelos
 
