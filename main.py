@@ -14,8 +14,6 @@ import matplotlib.pyplot as plt
 
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
-# ASHANTY
-
 # PRE-PROCESAMIENTO DE NOMINA DE SENASA(SENASA)
 senasa_df = pd.read_csv('Nominas/nomina_senasa.csv')
 
